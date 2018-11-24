@@ -51,3 +51,4 @@ class Articles:
 if __name__ == "__main__":
     articles = Articles()
     train_iter = articles.train_iter
+    train_batch = next(iter(train_iter))

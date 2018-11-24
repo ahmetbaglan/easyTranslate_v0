@@ -3,11 +3,12 @@ Model file
 """
 import torch
 import torch.nn as nn
+import torchtext
 from torch.nn import Linear
-from torch.nn.functional import softmax, relu
+from torch.nn.functional import softmax
 
 
-class Net(nn.Module):
+class SimpleNet(nn.Module):
     """
     Simple model for article-author paring
     """
@@ -25,7 +26,7 @@ class Net(nn.Module):
         :param p2: Dropout probability for the 2nd layer
         :param p3: Dropout probability in the output layer
         """
-        super(Net, self).__init__()
+        super(SimpleNet, self).__init__()
         num_embeddings = article_vectors.size()[0]
         embedding_dim = article_vectors.size()[1]
 
@@ -63,4 +64,71 @@ class Net(nn.Module):
         x = self.l_2(x)
 
         out = softmax(self.l_out(x), dim=1)
+        return out
+
+
+class CollaborativeFilteringNet(nn.Module):
+    """
+    Colaboratie filtering model for article-author paring
+    """
+
+    def __init__(self, article_field, author_field, author_dim=10, l1=100, l2=100, p1=0.3, p2=0.3, p3=0.3):
+        """
+
+        :param article_field: Field for the article texts
+        :type article_field: torchtext.data.Field
+        :param author_field: Field for authors
+        :type author_field: torchtext.data.Field
+        :param author_dim: Dimensionality of the author embedding
+        :param l1: Number of hidden units in the 1st layer
+        :param l2: Number of hidden units in the 2nd layer
+        :param p1: Dropout probability for the 1st layer
+        :param p2: Dropout probability for the 2nd layer
+        :param p3: Dropout probability in the output layer
+        """
+        super(CollaborativeFilteringNet, self).__init__()
+
+        article_vectors = article_field.vocab.vectors
+        num_embeddings = article_vectors.size()[0]
+        embedding_dim = article_vectors.size()[1]
+
+        self.article_embeddings = nn.Embedding(num_embeddings, embedding_dim)
+        self.article_embeddings.weight.data.copy_(article_vectors)
+
+        num_author = len(author_field.vocab.freqs)
+        self.author_embedding = nn.Embedding(num_author, author_dim)
+        self.author_embedding.weight.data.uniform_(0, 0.05)
+
+        self.l_1 = nn.Sequential(
+            nn.Dropout(p1),
+            Linear(in_features=(embedding_dim + author_dim),
+                   out_features=l1,
+                   bias=True),
+            nn.ReLU(),
+        )
+
+        self.l_2 = nn.Sequential(
+            nn.Dropout(p2),
+            Linear(in_features=l1,
+                   out_features=l2,
+                   bias=True),
+            nn.ReLU(),
+        )
+
+        self.l_out = nn.Sequential(
+            nn.Dropout(p3),
+            Linear(in_features=l2,
+                   out_features=1,
+                   bias=True),
+        )
+
+    def forward(self, x):
+        author = self.author_embedding(x.author)
+        text = torch.mean(self.article_embeddings(x.text), dim=0)
+        x = torch.cat((author, text), 1)
+
+        x = self.l_1(x)
+        x = self.l_2(x)
+
+        out = torch.sigmoid(self.l_out(x))
         return out

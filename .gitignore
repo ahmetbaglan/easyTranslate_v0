@@ -2,3 +2,5 @@
 model/\.idea/
 
 model/\.vector_cache/
+
+model/__pycache__/
