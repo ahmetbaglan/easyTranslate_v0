@@ -2,6 +2,7 @@ from torchtext import data
 import torch
 import spacy
 from torchtext.vocab import Vectors
+from common_words import common_words
 
 
 class Articles:
@@ -23,8 +24,8 @@ class Articles:
                 ('index', None),
                 ('id', None),
                 ('title', None),
-                ('publication', None),
                 ('author', self.author),
+                ('publication', None),
                 ('date', None),
                 ('year', None),
                 ('month', None),
@@ -32,7 +33,7 @@ class Articles:
                 ('text', self.text)
             ],
             skip_header=True,
-        ).split(split_ratio=[0.7, 0.15, 0.15])
+        ).split(split_ratio=[0.8, 0.1, 0.1])
 
         self.train_iter, self.test_iter, self.validation_iter = data.BucketIterator.splits(
             (self.train_set, self.validation_set, self.test_set),

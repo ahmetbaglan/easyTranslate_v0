@@ -96,9 +96,9 @@ def train_collaborative_f_model(train_iter, val_iter, net, test_iter, optimizer,
             train_loss /= train_length
             train_accs /= train_length
             train_res.append(train_accs)
-            print("Epoch {}: Train loss: {:.2f}, Train acc: {:.2f} Validation loss: {:.2f}, Validation acc: {:.2f}"
-                  .format(train_iter.epoch, train_loss, train_accs, val_loss, val_accs))
-
+            print(
+                "Epoch {}: Train loss: {:.2f}, Train avg error: {:.2f} Validation loss: {:.2f}, Validation avg error: {:.2f}"
+                    .format(train_iter.epoch, train_loss, train_accs, val_loss, val_accs))
             # plot_res(train_res, val_res, train_iter.epoch)
 
             net.train()
@@ -115,6 +115,10 @@ def train_collaborative_f_model(train_iter, val_iter, net, test_iter, optimizer,
         optimizer.zero_grad()
         batch_loss.backward()
         optimizer.step()
+
+        # print(
+        #     "Train loss: {:.3f}, Train avg error: {:.3f}"
+        #         .format(criterion(output, target), accuracy_sigmoid(output, target)))
 
         train_loss += criterion(output, target) * batch.batch_size * 2
         train_accs += accuracy_sigmoid(output, target) * batch.batch_size * 2
@@ -154,3 +158,9 @@ def accuracy_one_hot(output, target):
 
 def accuracy_sigmoid(output, target):
     return torch.mean(torch.abs(output - target).float())
+
+
+def print_params(net):
+    for name, param in net.named_parameters():
+        if param.requires_grad:
+            print(name, param.data)
