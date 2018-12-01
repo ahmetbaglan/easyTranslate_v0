@@ -1,0 +1,14 @@
+
+model/\.idea/
+
+model/\.vector_cache/
+
+model/__pycache__/
+
+\.idea/
+
+model/data/articlespart1\.csv
+
+model/data/articlespart1_cleansed\.csv
+
+model/data/test_long\.csv
